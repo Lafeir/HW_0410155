@@ -53,7 +53,9 @@ public:
 		time_t sdu = 0, pdu = 0, edu = 0;
 		board::reward sum = 0, max = 0;
 		auto it = data.end();
-		for (size_t i = 0; i < blk; i++) {
+		
+    
+    for (size_t i = 0; i < blk; i++) {
 			auto& ep = *(--it);
 			sum += ep.score();
 			max = std::max(ep.score(), max);
@@ -82,7 +84,20 @@ public:
 		for (size_t t = 0, c = 0; c < blk; c += stat[t++]) {
 			if (stat[t] == 0) continue;
 			unsigned accu = std::accumulate(std::begin(stat) + t, std::end(stat), 0);
-			std::cout << "\t" << ((1 << t) & -2u); // type
+			
+      if(t == 1 || t == 2)
+      { std::cout << "\t" << (t); // type
+      }
+      else
+      {     
+        int result = 3;
+        for( unsigned int i = 0 ; i < t - 3; i++)
+        {
+          result = result * 2;
+        }
+        std::cout << "\t" << (result); // type
+        
+      }   
 			std::cout << "\t" << (accu * 100.0 / blk) << "%"; // win rate
 			std::cout << "\t" "(" << (stat[t] * 100.0 / blk) << "%" ")"; // percentage of ending
 			std::cout << std::endl;

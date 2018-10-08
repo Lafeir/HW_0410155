@@ -17,7 +17,7 @@
 #include "statistic.h"
 
 int main(int argc, const char* argv[]) {
-	std::cout << "2048-Demo: ";
+	std::cout << "Threes!-Demo: ";
 	std::copy(argv, argv + argc, std::ostream_iterator<const char*>(std::cout, " "));
 	std::cout << std::endl << std::endl;
 
@@ -71,6 +71,9 @@ int main(int argc, const char* argv[]) {
 			if (who.check_for_win(game.state())) break; 
 		}
 		agent& win = game.last_turns(play, evil);
+   
+    evil.rebag();
+   
 		stat.close_episode(win.name());
 
 		play.close_episode(win.name());

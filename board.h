@@ -37,6 +37,17 @@ public:
 	data info() const { return attr; }
 	data info(data dat) { data old = attr; attr = dat; return old; }
 
+  int pow(int base,int power)
+  {
+    int result = 1;
+    for(int i = 0 ; i < power; i++)
+    {
+    result = result * base;
+    }
+    return result;
+    
+  }
+
 public:
 	bool operator ==(const board& b) const { return tile == b.tile; }
 	bool operator < (const board& b) const { return tile <  b.tile; }
@@ -73,7 +84,22 @@ public:
 	}
 
 	reward slide_left() {
-		board prev = *this;
+	
+  
+  	for (int r = 0; r < 4; r++) 
+    {
+       auto& row = tile[r];
+       for(int c = 0 ; c<4;c++)
+       {
+           int tile = row[c];
+           if(tile == 100)
+           {
+             row[c] = 0;
+           }
+       }
+     }
+   
+    board prev = *this;
 		reward score = 0;
 		
 		for (int r = 0; r < 4; r++) {
@@ -86,8 +112,6 @@ public:
 				
 				int tile = row[c];
 				row[c] = 0;
-				
-				if (tile == -1) tile = 0;
 				
 				if (c == 0)
 				{
@@ -113,7 +137,7 @@ public:
 						{
 							move = true;
 							row[top++] = 3;
-							score += (1 << 3);
+							score += (3);
 							hold = 0;
 						}
 						else
@@ -128,7 +152,7 @@ public:
 						{
 							move = true;
 							row[top++] = 3;
-							score += (1<<3);
+							score += (3);
 							hold = 0;
 						}
 						else
@@ -143,7 +167,7 @@ public:
 						{
 							move = true;
 							row[top++] = ++hold;
-							score += (1 << hold);
+							score += pow(3, hold - 2 );
 							hold = 0;
 						}
 						else
@@ -156,10 +180,12 @@ public:
 				}	
 			}
 
-			if (move) tile[r][top] = -1;
+			if (move) tile[r][top] = 100;
 			else if (hold) tile[r][top] = hold;
-		}
-		
+		}   
+   
+		return (*this != prev) ? score : -1;
+   
 		//­ìª©
 		/*
 		for (int r = 0; r < 4; r++) {
@@ -187,7 +213,7 @@ public:
 		*/
 
 
-		return (*this != prev) ? score : -1;
+	
 	}
 	reward slide_right() {
 		reflect_horizontal();

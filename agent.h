@@ -66,24 +66,33 @@ public:
 
 	int bag[3] = { 1,2,3 };
 
+
+  virtual void rebag()
+	{
+			bag[0] = 1;
+			bag[1] = 2;
+			bag[2] = 3;
+	}
+
 	virtual void checkbag()
 	{
 		bool empty = true;
 
 		for (int i = 0; i < 3; i++)
 		{
-			if (bag[i] == 1)
+			if (bag[i] != 0)
 				empty = false;
 		}
 
 		if (empty)
 		{
-			bag[0] = 1;
-			bag[1] = 2;
-			bag[2] = 3;
+			rebag();
 		}
 
 	}
+ 	
+  
+ 
 
 	virtual action take_action(const board& after) {
 
@@ -92,7 +101,7 @@ public:
 		checkbag();
 
 		for (int pos : space) {
-			if (after(pos) != -1) continue;
+			if (after(pos) != 100) continue;
 			
 			board::cell tile = bag[popup(engine)];		
 			while (tile == 0)
@@ -147,7 +156,7 @@ private:
 class player : public random_agent {
 public:
 	player(const std::string& args = "") : random_agent("name=dummy role=player " + args),
-		opcode({ 0, 1, 2, 3 }) {}
+		opcode({ 0, 1, 2 }) {}
 
 	virtual action take_action(const board& before) {
 		std::shuffle(opcode.begin(), opcode.end(), engine);
