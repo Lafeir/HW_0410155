@@ -10,6 +10,8 @@
 #include "action.h"
 #include "agent.h"
 
+//ver.AI.0
+
 class statistic;
 
 class episode {
@@ -37,6 +39,7 @@ public:
 	}
 	agent& take_turns(agent& play, agent& evil) {
 		ep_time = millisec();
+    //這裡改了一點點
 		return (std::max(step() + 1, size_t(9)) % 2) ? evil :  play;
 	}
 	agent& last_turns(agent& play, agent& evil) {

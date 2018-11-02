@@ -15,9 +15,11 @@
 #include "agent.h"
 #include "episode.h"
 #include "statistic.h"
+#include "weight.h"
+#include <fstream>
 
 int main(int argc, const char* argv[]) {
-	std::cout << "Threes!-Demo: ";
+	std::cout << "Threes!(ver.AI.1)-Demo: ";
 	std::copy(argv, argv + argc, std::ostream_iterator<const char*>(std::cout, " "));
 	std::cout << std::endl << std::endl;
 
@@ -58,31 +60,84 @@ int main(int argc, const char* argv[]) {
 	player play(play_args);
 	rndenv evil(evil_args);
 
+
+  if(play.using_net == false)
+  {
+     play.init_weights("reset");
+  }
+  
+
+
 	while (!stat.is_finished()) {
 		play.open_episode("~:" + evil.name());
 		evil.open_episode(play.name() + ":~");
 
 		stat.open_episode(play.name() + ":" + evil.name());
 		episode& game = stat.back();
-		while (true) {
-			agent& who = game.take_turns(play, evil);
+   
+    
+    //紀錄初始盤面(空)
+    board lastBoard = game.state();
+    double lastValue = play.countValue(lastBoard);
+    float lastScore = play.countScore(lastBoard);
+    double thisValue = 0;
+    float thisScroe = 0;
+    bool Start = false;
+
+    while (true) {
+        
+	  	agent& who = game.take_turns(play, evil);
+             
+      if( who.name() == play.name() && Start == false )
+      {      
+         Start = true;
+         lastBoard = game.state();
+         lastValue = play.countValue(lastBoard);
+         lastScore = play.countScore(lastBoard);
+         thisValue = 0;
+         thisScroe = 0;
+       } 
+             
 			action move = who.take_action(game.state());
 			if (game.apply_action(move) != true) break;
-			if (who.check_for_win(game.state())) break; 
+      
+      if( who.name() == play.name() )
+      {      
+         thisValue = play.countValue(game.state());
+         thisScroe = play.countScore(game.state());
+         //更新上次的版面分數         
+         float delta = thisScroe - lastScore + thisValue - lastValue;
+         play.updateValue(lastBoard , delta);
+         //紀錄這次的版面
+         lastBoard = game.state();
+         lastValue = thisValue;
+         lastScore = thisScroe;
+       }
+         
 		}
+    
+    double finalDelta = -play.countValue(lastBoard);    
+    play.updateValue( lastBoard , finalDelta);
+   
+    play.reset100( game.state());
+    
+    //play.showBoard(game.state());
+    
 		agent& win = game.last_turns(play, evil);
    
-    evil.rebag();
-   
+    //重新設置背包
+    evil.rebag();  
 		stat.close_episode(win.name());
-
 		play.close_episode(win.name());
+   
 		evil.close_episode(win.name());
 	}
 
 	if (summary) {
 		stat.summary();
 	}
+
+ //play.showWeight();
 
 	if (save.size()) {
 		std::ofstream out(save, std::ios::out | std::ios::trunc);

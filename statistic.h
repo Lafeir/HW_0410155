@@ -8,6 +8,8 @@
 #include "agent.h"
 #include "episode.h"
 
+//ver.AI.1
+
 class statistic {
 public:
 	/**
@@ -54,7 +56,7 @@ public:
 		board::reward sum = 0, max = 0;
 		auto it = data.end();
 		
-    
+
     for (size_t i = 0; i < blk; i++) {
 			auto& ep = *(--it);
 			sum += ep.score();
@@ -78,13 +80,14 @@ public:
 		std::cout <<     " (" << (pop * 1000.0 / pdu);
 		std::cout <<      "|" << (eop * 1000.0 / edu) << ")";
 		std::cout << std::endl;
-		std::cout.copyfmt(ff);
-
+		std::cout.copyfmt(ff);   
 		if (!tstat) return;
-		for (size_t t = 0, c = 0; c < blk; c += stat[t++]) {
+		for (size_t t = 0, c = 0; c < blk && t < 64 ; c += stat[t++]) {
+   
 			if (stat[t] == 0) continue;
+
 			unsigned accu = std::accumulate(std::begin(stat) + t, std::end(stat), 0);
-			
+
       if(t == 1 || t == 2)
       { std::cout << "\t" << (t); // type
       }
@@ -95,13 +98,15 @@ public:
         {
           result = result * 2;
         }
-        std::cout << "\t" << (result); // type
-        
-      }   
+        std::cout << "\t" << (result); // type      
+      }  
+
 			std::cout << "\t" << (accu * 100.0 / blk) << "%"; // win rate
 			std::cout << "\t" "(" << (stat[t] * 100.0 / blk) << "%" ")"; // percentage of ending
 			std::cout << std::endl;
+
 		}
+ 
 		std::cout << std::endl;
 	}
 

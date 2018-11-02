@@ -4,6 +4,8 @@
 #include <string>
 #include "board.h"
 
+//ver.AI.0
+
 class action {
 public:
 	action(unsigned code = -1u) : code(code) {}

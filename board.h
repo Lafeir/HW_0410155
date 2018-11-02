@@ -3,6 +3,8 @@
 #include <iostream>
 #include <iomanip>
 
+//ver.AI.0
+
 /**
  * array-based board for 2048
  *
@@ -44,9 +46,9 @@ public:
     {
     result = result * base;
     }
-    return result;
-    
+    return result;    
   }
+
 
 public:
 	bool operator ==(const board& b) const { return tile == b.tile; }
@@ -64,6 +66,7 @@ public:
 	 */
 	reward place(unsigned pos, cell tile) {
 		if (pos >= 16) return -1;
+    // 這裡有增加一點點
 		if (tile != 1 && tile != 2 && tile != 3) return -1;
 		operator()(pos) = tile;
 		return 0;
@@ -84,53 +87,59 @@ public:
 	}
 
 	reward slide_left() {
-	
-  
+ 
+    //清除盤面上的生成記號(100)
   	for (int r = 0; r < 4; r++) 
     {
        auto& row = tile[r];
        for(int c = 0 ; c<4;c++)
        {
            int tile = row[c];
-           if(tile == 100)
+           if(tile > 20)
            {
              row[c] = 0;
            }
        }
      }
-   
-    board prev = *this;
+ 
+		board prev = *this;
 		reward score = 0;
-		
+   
+	//每行
 		for (int r = 0; r < 4; r++) {
 
 			bool move = false;
 
 			auto& row = tile[r];
 			int top = 0, hold = 0;
+      //每列
 			for (int c = 0; c < 4; c++) {
 				
 				int tile = row[c];
 				row[c] = 0;
 				
+        //如果是第一格，直接拿取
 				if (c == 0)
 				{
 					hold = tile;
 				}
+        //否則，
 				else
 				{		
-
+          //如果上一格沒東西，且下一格有東西，直接移動。
 					if (hold == 0 && tile != 0)
 					{
 						move = true;
 						row[top++] = tile;
 						hold = 0;
 					}
+          //如果下一格沒東西。
 					else if (tile == 0)
 					{
 						row[top++] = hold;
 						hold = 0;
 					}
+          //如果下一格是 1 。
 					else if (tile == 1)
 					{
 						if (hold == 2)
@@ -146,6 +155,7 @@ public:
 							hold = tile;
 						}
 					}
+          //如果下一格是 2 。
 					else if (tile == 2)
 					{
 						if (hold == 1)
@@ -161,6 +171,7 @@ public:
 							hold = tile;
 						}
 					}
+          //如果下一格是 其他 。
 					else 
 					{
 						if (tile == hold)
@@ -176,44 +187,15 @@ public:
 							hold = tile;
 						}
 					}
-
 				}	
 			}
-
+      //若這一行進行過移動，則在列尾打上生成記號，否則放回本處的數字 。
 			if (move) tile[r][top] = 100;
 			else if (hold) tile[r][top] = hold;
 		}   
    
 		return (*this != prev) ? score : -1;
    
-		//原版
-		/*
-		for (int r = 0; r < 4; r++) {
-			auto& row = tile[r];
-			int top = 0, hold = 0;
-			for (int c = 0; c < 4; c++) {
-				int tile = row[c];
-				if (tile == 0) continue; //這裡要改
-				row[c] = 0;
-				if (hold) {			
-					if (tile == hold) { //這裡要改
-						row[top++] = ++tile;
-						score += (1 << tile); //這裡要改
-						hold = 0;
-					} else {
-						row[top++] = hold; //這裡要改
-						hold = tile;
-					}
-				} else {
-					hold = tile;
-				}
-			}
-			if (hold) tile[r][top] = hold;
-		}
-		*/
-
-
-	
 	}
 	reward slide_right() {
 		reflect_horizontal();
@@ -285,7 +267,7 @@ public:
 		return out;
 	}
 
-private:
+public:
 	grid tile;
 	data attr;
 };
