@@ -1,4 +1,4 @@
-# Three_AI-Demo
+# Three_Project 3
 Basic Environment for Game Three (Demo)<br>
 <p>
 Computer Games and Intelligence (CGI) Lab, NCTU, Taiwan<br>
