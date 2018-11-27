@@ -11,7 +11,7 @@ https://github.com/Lafeir/HW_0410155
   
 <p>
   11/28
-  更新成PROJECT 3版本
-  可用 ./three < in.txt > out.txt 使用
-  以前的版本用if收納在下面
+  更新成PROJECT 3版本<br>
+  可用 ./three < in.txt > out.txt 使用<br>
+  以前的版本用if收納在下面<br>
 <p>
