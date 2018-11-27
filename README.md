@@ -9,3 +9,9 @@ GitHub URL:
 https://github.com/Lafeir/HW_0410155
 <p>
   
+<p>
+  11/28
+  更新成PROJECT 3版本
+  可用 ./three < in.txt > out.txt 使用
+  以前的版本用if收納在下面
+<p>
