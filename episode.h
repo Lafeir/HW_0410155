@@ -37,11 +37,15 @@ public:
 		ep_score += reward;
 		return true;
 	}
-	agent& take_turns(agent& play, agent& evil) {
-		ep_time = millisec();
-    //這裡改了一點點
-		return (std::max(step() + 1, size_t(9)) % 2) ? evil :  play;
-	}
+	
+  //此處與2048原版不同
+  //這裡決定輪到誰了，因為開始時敵方要先動幾輪生成初始盤面，所以要在return中進行調整。
+  agent& take_turns(agent& play, agent& evil)
+    {
+		  ep_time = millisec();
+		  return (std::max(step() + 1, size_t(9)) % 2) ? evil :  play;
+	  }
+     
 	agent& last_turns(agent& play, agent& evil) {
 		return take_turns(evil, play);
 	}

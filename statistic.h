@@ -82,16 +82,20 @@ public:
 		std::cout << std::endl;
 		std::cout.copyfmt(ff);   
 		if (!tstat) return;
-		for (size_t t = 0, c = 0; c < blk && t < 64 ; c += stat[t++]) {
+	
+    //此處for中的條件好像有為了避免bug調整過。( t<64 )
+  	for (size_t t = 0, c = 0; c < blk && t < 64 ; c += stat[t++]) {
    
 			if (stat[t] == 0) continue;
 
 			unsigned accu = std::accumulate(std::begin(stat) + t, std::end(stat), 0);
-
-      if(t == 1 || t == 2)
-      { std::cout << "\t" << (t); // type
+      
+      //此處與2048原版不同
+      if(t == 1 || t == 2) //數值為1、2時，直接印出(不算分)
+      { 
+        std::cout << "\t" << (t); // type
       }
-      else
+      else  //超過3時，分數為3*(2的(X-1)次方)
       {     
         int result = 3;
         for( unsigned int i = 0 ; i < t - 3; i++)

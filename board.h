@@ -66,7 +66,10 @@ public:
 	 */
 	reward place(unsigned pos, cell tile) {
 		if (pos >= 16) return -1;
-    // 這裡有增加一點點
+   
+    // 這裡有經過修改
+    // 限定生成1、2、3這三種類型的數字。
+    // 之後增加獎勵格時。這邊應該要修改。
 		if (tile != 1 && tile != 2 && tile != 3) return -1;
 		operator()(pos) = tile;
 		return 0;
@@ -86,9 +89,9 @@ public:
 		}
 	}
 
-	reward slide_left() {
- 
-    //清除盤面上的生成記號(100)
+  void clear100()
+  {
+     //清除盤面上的生成記號(100)
   	for (int r = 0; r < 4; r++) 
     {
        auto& row = tile[r];
@@ -101,20 +104,27 @@ public:
            }
        }
      }
+  }
+
+	reward slide_left() {
+ 
+    //清除盤面上的生成記號(100)(或其他特殊數字)
+    clear100();
  
 		board prev = *this;
 		reward score = 0;
    
-	//每行
+	  //每行
 		for (int r = 0; r < 4; r++) {
 
 			bool move = false;
-
+      
 			auto& row = tile[r];
 			int top = 0, hold = 0;
+      
       //每列
 			for (int c = 0; c < 4; c++) {
-				
+				        
 				int tile = row[c];
 				row[c] = 0;
 				
@@ -126,62 +136,62 @@ public:
         //否則，
 				else
 				{		
-          //如果上一格沒東西，且下一格有東西，直接移動。
+          //如果上一格沒東西，且此格有東西，直接移動 (然後本格變空)。
 					if (hold == 0 && tile != 0)
 					{
 						move = true;
 						row[top++] = tile;
 						hold = 0;
 					}
-          //如果下一格沒東西。
+          //如果此格沒東西。
 					else if (tile == 0)
 					{
 						row[top++] = hold;
 						hold = 0;
 					}
-          //如果下一格是 1 。
+          //如果此格是 1 ，
 					else if (tile == 1)
 					{
-						if (hold == 2)
+						if (hold == 2) //如果可以融合
 						{
 							move = true;
 							row[top++] = 3;
 							score += (3);
 							hold = 0;
 						}
-						else
+						else //否則放下hold，拿取此格繼續往下看
 						{
 							row[top++] = hold;
 							hold = tile;
 						}
 					}
-          //如果下一格是 2 。
+          //如果此格是 2 ，
 					else if (tile == 2)
 					{
-						if (hold == 1)
+						if (hold == 1)//如果可以融合
 						{
 							move = true;
 							row[top++] = 3;
 							score += (3);
 							hold = 0;
 						}
-						else
+						else //否則放下hold，拿取此格繼續往下看
 						{
 							row[top++] = hold;
 							hold = tile;
 						}
 					}
-          //如果下一格是 其他 。
+          //如果下一格是 其他數字 ，
 					else 
 					{
-						if (tile == hold)
+						if (tile == hold) //如果相同可以融合
 						{
 							move = true;
 							row[top++] = ++hold;
 							score += pow(3, hold - 2 );
 							hold = 0;
 						}
-						else
+						else //否則放下hold，拿取此格繼續往下看
 						{
 							row[top++] = hold;
 							hold = tile;
@@ -189,14 +199,19 @@ public:
 					}
 				}	
 			}
+     
       //若這一行進行過移動，則在列尾打上生成記號，否則放回本處的數字 。
-			if (move) tile[r][top] = 100;
-			else if (hold) tile[r][top] = hold;
+			if (move) 
+          tile[r][top] = 100;
+			else if (hold) 
+          tile[r][top] = hold;
+          
 		}   
    
 		return (*this != prev) ? score : -1;
    
 	}
+ 
 	reward slide_right() {
 		reflect_horizontal();
 		reward score = slide_left();
