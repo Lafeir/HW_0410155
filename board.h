@@ -3,7 +3,7 @@
 #include <iostream>
 #include <iomanip>
 
-//ver.AI.0
+//ver.5
 
 /**
  * array-based board for 2048
@@ -70,7 +70,7 @@ public:
     // 這裡有經過修改
     // 限定生成1、2、3這三種類型的數字。
     // 之後增加獎勵格時。這邊應該要修改。
-		if (tile != 1 && tile != 2 && tile != 3) return -1;
+		//if (tile != 1 && tile != 2 && tile != 3) return -1;
 		operator()(pos) = tile;
 		return 0;
 	}

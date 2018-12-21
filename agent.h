@@ -10,7 +10,7 @@
 #include "weight.h"
 #include <fstream>
 
-//ver.AI.0
+//ver.5
 
 class agent {
 public:
@@ -95,22 +95,167 @@ public:
 
 public:
 
+  //設置設置權重表對照用的bitBoard公式(Ver.4)
+   virtual void transpose(int inBoard[16]) {
+		for (int r = 0; r < 4; r++) {
+			for (int c = r + 1; c < 4; c++) {
+				std::swap(inBoard[4 * r + c], inBoard[ 4 * c + r]);
+			}
+		}
+	}
+
+	virtual void reflect_horizontal(int inBoard[16]) {
+		for (int r = 0; r < 4; r++) {
+			std::swap(inBoard[ 4 * r + 0], inBoard[ 4 * r + 3]);
+			std::swap(inBoard[ 4 * r + 1], inBoard[ 4 * r + 2]);
+		}
+	}
+
+	virtual void reflect_vertical(int inBoard[16]) {
+		for (int c = 0; c < 4; c++) {
+			std::swap(inBoard[ 4 * 0 + c], inBoard[ 4 * 3 + c]);
+			std::swap(inBoard[ 4 * 1 + c], inBoard[ 4 * 2 + c]);
+		}
+	}
+ 
+ 	virtual void rotate_right(int inBoard[16]) { transpose(inBoard); reflect_horizontal(inBoard); } // clockwise
+	virtual void rotate_left(int inBoard[16]) { transpose(inBoard); reflect_vertical(inBoard); } // counterclockwise
+	virtual void reverse(int inBoard[16]) { reflect_horizontal(inBoard); reflect_vertical(inBoard); }
+ 
+ 
+   virtual void init_bitboard() //設置權重表對照用的bitBoard(Ver.4)
+   {
+      bitBoard.clear();
+      
+      int oneBoardA[16] = 
+       { 4, 5, 0, 0,
+         3, 6, 0, 0,     
+         2, 0, 0, 0, 
+         1, 0, 0, 0 };
+         
+      int oneBoardB[16] = 
+       { 0, 4, 5, 0,
+         0, 3, 6, 0,     
+         0, 2, 0, 0, 
+         0, 1, 0, 0 };
+         
+       int oneBoardC[16] = 
+       { 0, 0, 0, 0,
+         3, 4, 0, 0,     
+         2, 5, 0, 0, 
+         1, 6, 0, 0 };
+         
+       int oneBoardD[16] = 
+       { 0, 0, 0, 0,
+         0, 3, 4, 0,     
+         0, 2, 5, 0, 
+         0, 1, 6, 0 };
+       
+      //bitBoardA
+      for(int mirror = 0 ; mirror < 2 ; mirror++)  
+      {
+        for(int dir = 0 ; dir< 4 ; dir ++)
+        {
+          std::vector<int> temp;
+          for(int i = 0 ; i < 16 ; i++)
+          {
+            temp.emplace_back(oneBoardA[i]);
+          }
+          bitBoard.emplace_back(temp);  
+                
+          rotate_right(oneBoardA);
+        }
+        reflect_vertical(oneBoardA);
+      }
+    
+      //bitBoardB
+      for(int mirror = 0 ; mirror < 2 ; mirror++)  
+      {
+        for(int dir = 0 ; dir< 4 ; dir ++)
+        {
+          std::vector<int> temp;
+          for(int i = 0 ; i < 16 ; i++)
+          {
+            temp.emplace_back(oneBoardB[i]);
+          }
+          bitBoard.emplace_back(temp);  
+                
+          rotate_right(oneBoardB);
+        }
+        reflect_vertical(oneBoardB);
+      }
+      
+      //bitBoardC     
+      for(int mirror = 0 ; mirror < 2 ; mirror++)  
+      {
+        for(int dir = 0 ; dir< 4 ; dir ++)
+        {
+          std::vector<int> temp;
+          for(int i = 0 ; i < 16 ; i++)
+          {
+            temp.emplace_back(oneBoardC[i]);
+          }
+          bitBoard.emplace_back(temp);  
+                
+          rotate_right(oneBoardC);
+        }
+        reflect_vertical(oneBoardC);
+      }
+
+      //bitBoardD    
+      for(int mirror = 0 ; mirror < 2 ; mirror++)  
+      {
+        for(int dir = 0 ; dir< 4 ; dir ++)
+        {
+          std::vector<int> temp;
+          for(int i = 0 ; i < 16 ; i++)
+          {
+            temp.emplace_back(oneBoardD[i]);
+          }
+          bitBoard.emplace_back(temp);  
+                
+          rotate_right(oneBoardD);
+        }
+        reflect_vertical(oneBoardD);
+      }
+      
+       /*
+      std::cout<<std::endl<<"bitBoard Setting Finish"<<std::endl;
+            
+      for(int i = 0 ; i<32 ;i++)
+      {
+        for(int j = 0 ; j < 16 ; j++)
+        {
+          std::cout << bitBoard[i][j];
+        }
+          std::cout << std::endl;
+      }
+      */
+   }
+
+
   //重置訓練網路
   //目前的數值參考區是各行各列，改變參考區時要修改此處。
 	virtual void init_weights(const std::string& info) {
  
- 	  // Set net.size() == 2; net[0].size() == 83521; net[1].size() == 83521
+ 	  // Set net.size() == 4
     using_net = true;
-		net.emplace_back(83521); // create an empty weight table with size 83521 (17^4)
-		net.emplace_back(83521); // create an empty weight table with size 83521
+		net.emplace_back(72412707); // create an empty weight table with size 72412707 (17^6 * 3) //(Ver.4)
+		net.emplace_back(72412707); 
+		net.emplace_back(72412707); 
+		net.emplace_back(72412707); 
 	
      //Set to 0
      for( size_t i = 0 ; i < net[0].size() ; i++)
      {
        net[0][i] = 0;
        net[1][i] = 0;
+       net[2][i] = 0;
+       net[3][i] = 0;
+       
      }
    
+
 	}
  
   //讀取訓練網路(太複雜了看不懂)
@@ -145,6 +290,9 @@ public:
   bool random_training;
   //確認是否重置了網路(好在未使用任何參數時自動歸零，來防止出Bug)
   bool using_net = false;
+  
+     //宣告bitBoard。
+	std::vector< std::vector<int> > bitBoard;
 };
 
 /**
@@ -177,24 +325,29 @@ class rndenv : public random_agent {
 public:
 	rndenv(const std::string& args = "") : random_agent("name=random role=environment " + args),
 		space({ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 }),  //空間陣列 0~15
-    popup(0, 2)  //隨機範圍 0~2
+    popup(0, 11),  //隨機範圍 0~2
+    random_21 (0, 20)
     {}
 
-	int bag[3] = { 1,2,3 };
+	int bag[12] = { 1,1,1,1, 2,2,2,2, 3,3,3,3 };
 
   //重置背包
   virtual void rebag()
 	{
-			bag[0] = 1;
-			bag[1] = 2;
-			bag[2] = 3;
+		 for(int i = 0 ; i < 3 ; i++)
+     {
+       for(int j = 0 ; j < 4 ; j++)
+       {
+          bag[ (i * 4) + j] = i + 1;
+       } 
+     }
 	}
  
   //檢查背包空了沒
  	virtual void checkbag()
 	{
 		bool empty = true;
-		for (int i = 0; i < 3; i++)
+		for (int i = 0; i < 12; i++)
 		{
 			if (bag[i] != 0)
 				empty = false;
@@ -213,35 +366,80 @@ public:
     //檢查背包空了沒。
 		checkbag();
 
+    //找到盤面最大值。
+    unsigned int max = 0;  
+    for(int pos : space)
+    {
+        if( after(pos) < 50 && after(pos) > max )
+        {
+            max =  after(pos);       
+        }    
+    }
+    if(max > 6 && RandomCoolDown==100)
+    {
+        RandomCoolDown = 0;
+    }
+
     //在盤面上尋找100 (可能生成之空格)
 		for (int pos : space) {
-      
+     
       //不是100就跳過
-			if (after(pos) != 100) continue;		    
+			if (after(pos) != 100) continue;		 
+       
+      board::cell tile;
       
-      //隨機取一種生成結果
-			board::cell tile = bag[popup(engine)];	
-       //如果背包中目前沒有該數字，重新隨機
-			while (tile == 0) 
-			{
-				tile = bag[popup(engine)];
-			}      
-      //決定後從背包中拿走該數字 (變成0)
-			bag[tile - 1] = 0; 
+        if(  random_21(engine) == 15 && RandomCoolDown == 0 && max >  6 )
+        {
+            RandomCoolDown = 20;
+          
+            max = max - 7;
+          
+            unsigned int temp_tile = random_21(engine);
+            while( temp_tile > max)
+            {
+               temp_tile = random_21(engine);
+            }
+          
+            tile = ( 4 + temp_tile );                
+        }
+        else
+        {        
+            //如果之前有生成過bouns格，還在冷卻中，減少冷卻時間。(Ver.4)
+             if(RandomCoolDown > 0 )
+            {
+               RandomCoolDown -= 1 ;
+            }
+          
+            //隨機取一種生成結果
+            int randomNum = popup(engine);
+		  	    tile = bag[randomNum];	
+             //如果背包中目前沒有該數字，重新隨機
+		      	while (tile == 0) 
+		      	{
+              randomNum = popup(engine);
+		  	    	tile = bag[randomNum];
+		      	}      
+             //決定後從背包中拿走該數字 (變成0)
+		      	bag[randomNum] = 0; 
       
-      //回傳決定(位置,數字)
-			return action::place(pos, tile); 
-		}
-
+            //回傳決定(位置,數字)
+	      		return action::place(pos, tile); 
+  	  	}
+    }
+    
 		//如果搜尋完發現整個盤面沒有100，改搜尋0 (開局時)
 		for (int pos : space) {
 			if (after(pos) != 0) continue;
-			board::cell tile = bag[popup(engine)];
+      
+	    int randomNum = popup(engine);
+			board::cell tile = bag[randomNum];	
 			while (tile == 0)
 			{
-				tile = bag[popup(engine)];
+        randomNum = popup(engine);
+				tile = bag[randomNum];
 			}
-			bag[tile - 1] = 0;
+			bag[randomNum] = 0;
+      
 			return action::place(pos, tile);
 		}
 
@@ -253,6 +451,11 @@ public:
 private:
 	std::array<int, 16> space;
 	std::uniform_int_distribution<int> popup; //隨機參數，建構時會設置範圍
+ 	std::uniform_int_distribution<int> random_21;
+
+public :
+  int RandomCoolDown;
+
 };
 
 
@@ -307,82 +510,123 @@ public:
   
   //計算盤面"數值"(需輸入當前盤面)
   //目前的數值參考區是各行各列，改變參考區時要修改此處。
-  virtual double countValue(const board& inBoard)
+  virtual double countValue(const board& inBoard ,const int& RandomCoolDown = 100)
   {
     double totalValue = 0; //總值
-    size_t  key1 = 0 , key2 = 0; //Key值 (用來查詢Table)
-    int oneTile1  = 0 , oneTile2 = 0;
+    size_t  key = 0; //Key值 (用來查詢Table)
+    int oneTile  = 0;
     auto& tile = inBoard.tile;
     
-    //從各行(key1)列(key2)的頭讀到尾，計算總值
-    for(int r = 0 ; r < 4 ; r++)
+    int BounsSituation = 0;
+    
+    //if(RandomCoolDown > 5) {BounsSituation = 2;}
+    //else if(RandomCoolDown > 0) {BounsSituation = 1;}
+    //else { BounsSituation = 0;}    
+    
+    //讀取4種共8個方向的bitBoard，計算總值
+    int bitNum = 0;
+    for(int type = 0 ; type < 4 ; type++)
     {
-      key1 = 0;   
-      key2 = 0;
-      for (int c = 0; c < 4; c++) 
-      {
-	      oneTile1 = tile[r][c]; //讀取行中每一格的數字
-        oneTile2 = tile[c][r]; //讀取列中每一格的數字
-        if(oneTile1 == 100 )oneTile1 = 16; //如果是100，設置代號為16(待生成格)
-        if(oneTile2 == 100 )oneTile2 = 16;
-        key1 += oneTile1 * power(17,c);    //Key增加數字*17^位數
-        key2 += oneTile2 * power(17,c);  
+      for(int no = 0 ; no < 8 ; no++)
+      { 
+          //從版面根據bitBoard獲得key
+          key = 0;
+          
+          for(int i = 0 ; i < 16 ; i++)
+          {
+                      
+            bitNum = bitBoard[type*8 + no][i];
+            
+            if( bitNum != 0)
+            {
+                oneTile = tile[i/4][i%4];
+                if(oneTile > 50 )oneTile = 16; //如果是100，設置代號為16(待生成格)
+                key += oneTile *  power(17, bitNum - 1);  //Key增加bit數字*17^位數
+            }
+          }         
+          
+          key += BounsSituation *  power(17, 6);
+          
+          //根據key從權重表中獲取數值。              
+          totalValue += net[type][key];
       }
-      
-      if(r == 0 || r == 3) //邊界的Table為net[0]
-        {
-        totalValue += net[0][key1];
-        totalValue += net[0][key2];
-        }
-      else if(r == 1 || r == 2) //中間的Table為net[1]
-        {
-        totalValue += net[1][key1];
-        totalValue += net[1][key2];
-        }
-    }
-           
-    return totalValue; //回傳總值   
+    } 
+        
+    return totalValue; //回傳總值    
   }
   
 
   //更新"數值"表(需輸入當前盤面,差值)
   //目前的數值參考區是各行各列，改變參考區時要修改此處。
-  virtual void updateValue(const board& lastBoard , double delta)
+  virtual void updateValue(const board& lastBoard ,const double& delta , const int& RandomCoolDown = 100)
   {
-     //所有參考列增加： 差值 * 更新幅度 / 總參考列數 
-     float CheckNum = 8;
+      
+      //所有參考列增加： 差值 * 更新幅度 / 總參考列數 
+     float CheckNum = 32;
      double piece =  delta/CheckNum * alpha;
 
-     size_t  key1 = 0 , key2 = 0;
-     int oneTile1  =0,oneTile2= 0;
+     size_t  key = 0 ;
+     size_t  keyA = 0 ;
+     size_t  keyB = 0 ;
+     size_t  keyC = 0 ;
+     
+     int oneTile  =0;
      auto& tile = lastBoard.tile;
+    
+    int BounsSituation = 0;
+    //if(RandomCoolDown > 3) {BounsSituation = 2;}
+    //else if(RandomCoolDown > 0) {BounsSituation = 1;}
+    //else { BounsSituation = 0;}
 
-    //請參考上方讀取處，沒差很多　
-    for(int r = 0 ; r < 4 ; r++)
+    //讀取4種共8個方向的bitBoard，計算總值
+    int bitNum = 0;
+    for(int type = 0 ; type < 4 ; type++)
     {
-        key1 = 0;   
-        key2 = 0;  
-        for (int c = 0; c < 4; c++) 
-        {    
-         oneTile1 = tile[r][c];
-         oneTile2 = tile[c][r];
-         if(oneTile1 == 100 )oneTile1 = 16;
-         if(oneTile2 == 100 )oneTile2 = 16;
-         key1 += oneTile1 * power(17,c);  
-         key2 += oneTile2 * power(17,c);  
-        }
-      
-        if(r == 0 || r == 3)
+      for(int no = 0 ; no < 8 ; no++)
+      {
+          //從版面根據bitBoard獲得key
+          key = 0;
+          
+          for(int i = 0 ; i < 16 ; i++)
           {
-              net[0][key1] += piece; //更新平均差值(無論是正是負)
-              net[0][key2] += piece;
+            bitNum = bitBoard[type*8 + no][i];
+            if( bitNum != 0)
+            {
+                oneTile = tile[i/4][i%4];
+                if(oneTile > 50 )oneTile = 16; //如果是100，設置代號為16(待生成格)
+                key += oneTile *  power(17, bitNum - 1);  //Key增加bit數字*17^位數
+            }
           }
-        else
-         {
-              net[1][key1] += piece;
-              net[1][key2] += piece;
+         
+          //更新平均差值(無論是正是負)
+          //key += BounsSituation *  power(17, 6);
+          //net[type][keyC] += piece;
+          
+          keyA = key;
+          keyB = key;
+          keyC = key;
+          
+          keyA += 2 *  power(17, 6);
+          keyB += 1 *  power(17, 6);
+          keyC += 0 *  power(17, 6);
+          
+
+          if(BounsSituation >= 2)
+          {
+            net[type][keyA] += piece;
           }
+          if(BounsSituation >= 1)
+          {
+            net[type][keyB] += piece;
+          }
+          if(BounsSituation >= 0)
+          {
+            net[type][keyC] += piece;
+          }
+          
+          
       }
+    }  
            
   }
   

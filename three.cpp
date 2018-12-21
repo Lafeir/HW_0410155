@@ -5,6 +5,8 @@
  * Computer Games and Intelligence (CGI) Lab, NCTU, Taiwan
  * http://www.aigames.nctu.edu.tw
  */
+ 
+// Version : 05
 
 #include <iostream>
 #include <fstream>
@@ -22,7 +24,7 @@
 
 int main(int argc, const char* argv[]) {
 
-  int projectNowIs = 3;
+  int projectNowIs = 4;
   
   if(projectNowIs == 3)
   {
@@ -75,7 +77,7 @@ int main(int argc, const char* argv[]) {
       }
       
   }  
-  else if(projectNowIs == 2)
+  else if(projectNowIs == 4)
   {	
   
       std::cout << "Threes!(Project : "<<projectNowIs<<" )-Demo: ";
@@ -129,7 +131,7 @@ int main(int argc, const char* argv[]) {
       {
          play.init_weights("reset");
       }
-    
+      play.init_bitboard();
     
     	while (!stat.is_finished()) {
     		play.open_episode("~:" + evil.name());
@@ -138,12 +140,16 @@ int main(int argc, const char* argv[]) {
     		stat.open_episode(play.name() + ":" + evil.name());
     		episode& game = stat.back();
        
+        //每輪開始時，重整背包。
+        evil.rebag();  
+        evil.RandomCoolDown = 100;
         
         //設置一些需要的東西。
         board lastBoard = game.state();
         double thisValue = 0, lastValue = play.countValue(lastBoard);
         float thisScroe = 0 , lastScore = play.countScore(lastBoard);
         bool Start = false;
+        int RandomCoolDown = 0;
     
         while (true) {
             
@@ -158,6 +164,9 @@ int main(int argc, const char* argv[]) {
              lastValue = play.countValue(lastBoard);
              lastScore = play.countScore(lastBoard);
            } 
+          
+          //確認Bouns格的冷卻時間 
+          RandomCoolDown = evil.RandomCoolDown;
                 
           //進行行動(玩家移動，敵方生成)      
     			action move = who.take_action(game.state());
@@ -167,12 +176,12 @@ int main(int argc, const char* argv[]) {
           if( who.name() == play.name() )
           {      
              //確認目前的權重數值與分數。
-             thisValue = play.countValue(game.state());
+             thisValue = play.countValue(game.state(),RandomCoolDown);
              thisScroe = play.countScore(game.state());
             
              //藉此更新上次版面的數值。         
              float delta = (thisScroe - lastScore) + (thisValue - lastValue);
-             play.updateValue(lastBoard , delta);
+             play.updateValue(lastBoard , delta, RandomCoolDown);
             
              //然後紀錄這次的版面。
              lastBoard = game.state();
@@ -186,9 +195,8 @@ int main(int argc, const char* argv[]) {
         double finalDelta = 0 - play.countValue(lastBoard);    
         play.updateValue( lastBoard , finalDelta);
        
-        //每輪結束後，清除盤面上的100、重置背包。
+        //每輪結束後，清除盤面上的100。
         play.reset100( game.state());
-        evil.rebag();  
         
         //確認勝者
     		agent& win = game.last_turns(play, evil);
