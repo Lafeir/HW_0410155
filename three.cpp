@@ -112,8 +112,7 @@ int main(int argc, const char* argv[]) {
     		} 
        
     	}
-    
-      
+     
     	statistic stat(total, block, limit);
     
     	if (load.size()) {
@@ -133,7 +132,13 @@ int main(int argc, const char* argv[]) {
       }
       play.init_bitboard();
     
+      std::vector<board> boardEpisode1;
+      std::vector<float> boardEpisode2;
+      std::vector<float> boardEpisode3;
+    
+      //每一輪開始
     	while (!stat.is_finished()) {
+     
     		play.open_episode("~:" + evil.name());
     		evil.open_episode(play.name() + ":~");
     
@@ -143,30 +148,57 @@ int main(int argc, const char* argv[]) {
         //每輪開始時，重整背包。
         evil.rebag();  
         evil.RandomCoolDown = 100;
+        evil.nextTile = 100;
+        play.RandomCoolDown = 100;
+        play.nextTile = 100;
+        evil.bounsCounter = 0;
+        evil.normalCounter = 0;
         
         //設置一些需要的東西。
         board lastBoard = game.state();
-        double thisValue = 0, lastValue = play.countValue(lastBoard);
-        float thisScroe = 0 , lastScore = play.countScore(lastBoard);
+        double thisValue = 0, lastValue = 0;
+        float thisScroe = 0 , lastScore = 0;
         bool Start = false;
-        int RandomCoolDown = 0;
+        int RandomCoolDown = 100 , lastRandomCoolDown = 100;
+        int nextTile = 100 , lastNextTile = 100;
     
+        boardEpisode1.clear();
+	    	boardEpisode1.reserve(32768);
+        boardEpisode2.clear();
+	    	boardEpisode2.reserve(32768);
+        boardEpisode3.clear();
+	    	boardEpisode3.reserve(32768);
+      
+
         while (true) {
-            
+                         
           //檢查換誰了( episode.h的take_turns中有初始輪替的順序設置 )
-    	  	agent& who = game.take_turns(play, evil);
+    	  	agent& who = game.take_turns(play, evil);       
          
-          //第一次輪到玩家時，紀錄目前的數值與盤面。  
-          if(Start == false && who.name() == play.name() ) 
-          {      
-             Start = true;
-             lastBoard = game.state();
-             lastValue = play.countValue(lastBoard);
-             lastScore = play.countScore(lastBoard);
-           } 
+          //輪到玩家時，  
+          if(who.name() == play.name() ) 
+          {                                   
+                //更新下次的格子和獎勵格冷卻
+                play.RandomCoolDown = RandomCoolDown;
+                play.nextTile = nextTile;
+                
+                if(Start == false) //第一次紀錄目前的數值與盤面。
+                {
+                    Start = true;
+                   lastBoard = game.state();
+                   lastValue = play.countValue(lastBoard, lastRandomCoolDown , lastNextTile);
+                   lastScore = play.countScore(lastBoard);
+                }
+                  
+          }
+          else  if(who.name() == evil.name() )  //換敵方時，紀錄上次的格子和獎勵格冷卻
+          {
+           lastRandomCoolDown = RandomCoolDown;
+           lastNextTile = nextTile;
+          } 
           
-          //確認Bouns格的冷卻時間 
-          RandomCoolDown = evil.RandomCoolDown;
+        
+           
                 
           //進行行動(玩家移動，敵方生成)      
     			action move = who.take_action(game.state());
@@ -176,24 +208,53 @@ int main(int argc, const char* argv[]) {
           if( who.name() == play.name() )
           {      
              //確認目前的權重數值與分數。
-             thisValue = play.countValue(game.state(),RandomCoolDown);
-             thisScroe = play.countScore(game.state());
+             //thisValue = play.countValue(game.state(),RandomCoolDown,nextTile);
+             //thisScroe = play.countScore(game.state());
             
              //藉此更新上次版面的數值。         
-             float delta = (thisScroe - lastScore) + (thisValue - lastValue);
-             play.updateValue(lastBoard , delta, RandomCoolDown);
+             //float delta = (thisScroe - lastScore) + (thisValue - lastValue);
+             //play.updateValue(lastBoard , delta, lastRandomCoolDown,lastNextTile);
             
+             boardEpisode1.push_back(lastBoard);
+             boardEpisode2.push_back(lastRandomCoolDown);
+             boardEpisode3.push_back(lastNextTile);
+             
              //然後紀錄這次的版面。
              lastBoard = game.state();
              lastValue = thisValue;
-             lastScore = thisScroe;       
+             lastScore = thisScroe;                         
+                        
            }
+           else if(who.name() == evil.name() )   //換敵方時，更新下次的格子和獎勵格冷卻
+           {
+                    
+            nextTile = evil.nextTile;
+            RandomCoolDown = evil.RandomCoolDown;
+          }
              
     		}
         
         //每輪結束後，將最終版面的權重值設為 0 
-        double finalDelta = 0 - play.countValue(lastBoard);    
-        play.updateValue( lastBoard , finalDelta);
+        double finalDelta = 0 - play.countValue(boardEpisode1[boardEpisode1.size()-1],boardEpisode2[boardEpisode1.size()-1] ,boardEpisode3[boardEpisode1.size()-1]);    
+        play.updateValue( boardEpisode1[boardEpisode1.size() - 1] , finalDelta, boardEpisode2[boardEpisode1.size() - 1] ,boardEpisode3[boardEpisode1.size() - 1] );
+       
+	    	for(int i = boardEpisode1.size() - 2; i >= 0; i--){
+		    	//state step_next = episode[i + 1];
+	    		//train_weights(episode[i].after, step_next.after, step_next.reward);
+                                                             
+          //確認目前的權重數值與分數。
+          thisValue = play.countValue(boardEpisode1[i+1],boardEpisode2[i+1],boardEpisode3[i+1]);
+          thisScroe = play.countScore(boardEpisode1[i+1]);
+          
+          lastValue = play.countValue(boardEpisode1[i],boardEpisode2[i],boardEpisode3[i]);
+          lastScore = play.countScore(boardEpisode1[i]);
+            
+          //藉此更新上次版面的數值。         
+          float delta = (thisScroe - lastScore) + (thisValue - lastValue);
+          
+          play.updateValue( boardEpisode1[i], delta,boardEpisode2[i],boardEpisode3[i]);
+                                                    
+	    	}
        
         //每輪結束後，清除盤面上的100。
         play.reset100( game.state());

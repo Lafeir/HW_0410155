@@ -34,6 +34,7 @@ $ ./2048 --play="alpha=0.0025"
 To load the weights from a file, test the network for 1000 games, and save the statistic
 $ ./2048 --total=1000 --play="load=weights.bin alpha=0" --save="stat.txt"
 
-./2048 --play="init=0"
-./2048 --total=100000 --block=1000 --play="init=0 alpha=0.0025 save=weights.bin"
-./2048 --total=1000 --play="load=weights.bin alpha=0" --save="stat.txt"
+./three --play="init=0"
+./three --total=1000000 --block=100000 --play="init=0 alpha=0.1 save=weights.bin"
+./three --total=5000000 --block=100000 --play="load=weights.bin alpha=0.1 save=weights2.bin"
+./three --total=1000 --play="load=weights.bin alpha=0" --save="stat.txt"

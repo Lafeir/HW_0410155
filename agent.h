@@ -240,10 +240,21 @@ public:
  
  	  // Set net.size() == 4
     using_net = true;
-		net.emplace_back(72412707); // create an empty weight table with size 72412707 (17^6 * 3) //(Ver.4)
-		net.emplace_back(72412707); 
-		net.emplace_back(72412707); 
-		net.emplace_back(72412707); 
+    //普通版
+		net.emplace_back(96550276); // create an empty weight table with size 72412707 (17^6 * 4) //(Ver.4)   //(1,2,3,u)
+		net.emplace_back(96550276); 
+		net.emplace_back(96550276); 
+		net.emplace_back(96550276); 
+    //delta版
+ 		net.emplace_back(96550276); // create an empty weight table with size 72412707 (17^6 * 4) //(Ver.4)   //(1,2,3,u)
+		net.emplace_back(96550276); 
+		net.emplace_back(96550276); 
+		net.emplace_back(96550276); 
+    //Abs(delta)版
+ 		net.emplace_back(96550276); // create an empty weight table with size 72412707 (17^6 * 4) //(Ver.4)   //(1,2,3,u)
+		net.emplace_back(96550276); 
+		net.emplace_back(96550276); 
+		net.emplace_back(96550276); 
 	
      //Set to 0
      for( size_t i = 0 ; i < net[0].size() ; i++)
@@ -253,6 +264,15 @@ public:
        net[2][i] = 0;
        net[3][i] = 0;
        
+       net[4][i] = 0;
+       net[5][i] = 0;
+       net[6][i] = 0;
+       net[7][i] = 0;
+       
+       net[8][i] = 0;
+       net[9][i] = 0;
+       net[10][i] = 0;
+       net[11][i] = 0;     
      }
    
 
@@ -386,11 +406,12 @@ public:
       //不是100就跳過
 			if (after(pos) != 100) continue;		 
        
-      board::cell tile;
-      
-        if(  random_21(engine) == 15 && RandomCoolDown == 0 && max >  6 )
+      board::cell tile;         
+        
+        //生成決定好的結果
+        if(nextTile==3) //獎勵格
         {
-            RandomCoolDown = 20;
+            //RandomCoolDown = 20;
           
             max = max - 7;
           
@@ -400,16 +421,58 @@ public:
                temp_tile = random_21(engine);
             }
           
-            tile = ( 4 + temp_tile );                
+            tile = ( 4 + temp_tile );  
+            bounsCounter++;       
         }
-        else
-        {        
+        else   //正常格 (0,1,2)
+        {
             //如果之前有生成過bouns格，還在冷卻中，減少冷卻時間。(Ver.4)
-             if(RandomCoolDown > 0 )
+             if( RandomCoolDown < 80 && RandomCoolDown > 0 )
             {
                RandomCoolDown -= 1 ;
             }
           
+            tile = nextTile + 1;
+            normalCounter++;  
+        }
+        
+        //隨機下一個生成的結果        
+        //隨機生成特殊格
+        float rat = ((float)1)/((float)21);
+        if( /*false &&*/ random_21(engine) == 12 &&  max >  6 && ( (bounsCounter / (bounsCounter + normalCounter)) < rat ) /*RandomCoolDown == 0 */ )
+        {
+             nextTile = 3;                     
+        }
+        else //其餘正常生成
+        {               
+           //隨機取一種生成結果
+            int randomNum = popup(engine);
+		  	    nextTile = bag[randomNum];	
+             //如果背包中目前沒有該數字，重新隨機
+		      	while (nextTile == 0) 
+		      	{
+              randomNum = popup(engine);
+		  	    	nextTile = bag[randomNum];
+		      	}      
+             //決定後從背包中拿走該數字 (變成0)
+		      	bag[randomNum] = 0;  
+            
+            nextTile = nextTile -1 ;  //正常格 (0,1,2)           	      	
+  	  	}
+         
+        //回傳決定(位置,數字)
+     	  return action::place(pos, tile); 
+    }
+    
+		//如果搜尋完發現整個盤面沒有100，改搜尋0 (開局時)
+		for (int pos : space) {
+			if (after(pos) != 0) continue;
+      
+       board::cell tile = nextTile + 1;
+       
+       //如果剛開始，隨機決定第一個數字。
+        if(nextTile == 100)
+        {          
             //隨機取一種生成結果
             int randomNum = popup(engine);
 		  	    tile = bag[randomNum];	
@@ -423,22 +486,30 @@ public:
 		      	bag[randomNum] = 0; 
       
             //回傳決定(位置,數字)
-	      		return action::place(pos, tile); 
-  	  	}
-    }
-    
-		//如果搜尋完發現整個盤面沒有100，改搜尋0 (開局時)
-		for (int pos : space) {
-			if (after(pos) != 0) continue;
-      
-	    int randomNum = popup(engine);
-			board::cell tile = bag[randomNum];	
-			while (tile == 0)
-			{
-        randomNum = popup(engine);
-				tile = bag[randomNum];
-			}
-			bag[randomNum] = 0;
+	      		nextTile = tile - 1; 
+        }
+        
+        //生成決定好的結果
+        //正常格 (0,1,2)
+          
+            tile = nextTile + 1;
+            normalCounter++;        
+            
+       //隨機下一個生成的結果        
+       //正常生成                  
+           //隨機取一種生成結果
+            int randomNum = popup(engine);
+		  	    nextTile = bag[randomNum];	
+             //如果背包中目前沒有該數字，重新隨機
+		      	while (nextTile == 0) 
+		      	{
+              randomNum = popup(engine);
+		  	    	nextTile = bag[randomNum];
+		      	}      
+             //決定後從背包中拿走該數字 (變成0)
+		      	bag[randomNum] = 0;             
+            nextTile = nextTile -1 ;  //正常格 (0,1,2)  
+             	      	
       
 			return action::place(pos, tile);
 		}
@@ -455,7 +526,9 @@ private:
 
 public :
   int RandomCoolDown;
-
+  int nextTile;
+  float bounsCounter;
+  float normalCounter;
 };
 
 
@@ -479,7 +552,7 @@ public :
 class player : public learning_agent {
 public:
 	player(const std::string& args = "") : learning_agent("name=dummy role=player " + args),
-		opcode({ 0, 1, 2, 3 }) , random (0, 2){}
+		opcode({ 0, 1, 2 }) , random (0, 2){}
   
   
   //計算盤面"分數"(需輸入當前盤面)
@@ -510,7 +583,7 @@ public:
   
   //計算盤面"數值"(需輸入當前盤面)
   //目前的數值參考區是各行各列，改變參考區時要修改此處。
-  virtual double countValue(const board& inBoard ,const int& RandomCoolDown = 100)
+  virtual double countValue(const board& inBoard ,const int RandomCoolDown = 100,const int nextTile = 100)
   {
     double totalValue = 0; //總值
     size_t  key = 0; //Key值 (用來查詢Table)
@@ -519,9 +592,8 @@ public:
     
     int BounsSituation = 0;
     
-    //if(RandomCoolDown > 5) {BounsSituation = 2;}
-    //else if(RandomCoolDown > 0) {BounsSituation = 1;}
-    //else { BounsSituation = 0;}    
+    if(RandomCoolDown > 0) {BounsSituation = 0;} //不會生成
+    else                   { BounsSituation = 0;}      //會生成
     
     //讀取4種共8個方向的bitBoard，計算總值
     int bitNum = 0;
@@ -545,7 +617,7 @@ public:
             }
           }         
           
-          key += BounsSituation *  power(17, 6);
+          key += ( /*BounsSituation +*/ nextTile ) *  power(17, 6);
           
           //根據key從權重表中獲取數值。              
           totalValue += net[type][key];
@@ -558,25 +630,21 @@ public:
 
   //更新"數值"表(需輸入當前盤面,差值)
   //目前的數值參考區是各行各列，改變參考區時要修改此處。
-  virtual void updateValue(const board& lastBoard ,const double& delta , const int& RandomCoolDown = 100)
+  virtual void updateValue(const board& lastBoard ,const double& delta , const int lastRandomCoolDown = 100,const int lastNextTile = 100)
   {
       
       //所有參考列增加： 差值 * 更新幅度 / 總參考列數 
      float CheckNum = 32;
-     double piece =  delta/CheckNum * alpha;
+     double piece =  delta/CheckNum ;
 
      size_t  key = 0 ;
-     size_t  keyA = 0 ;
-     size_t  keyB = 0 ;
-     size_t  keyC = 0 ;
      
      int oneTile  =0;
      auto& tile = lastBoard.tile;
     
     int BounsSituation = 0;
-    //if(RandomCoolDown > 3) {BounsSituation = 2;}
-    //else if(RandomCoolDown > 0) {BounsSituation = 1;}
-    //else { BounsSituation = 0;}
+    if(lastRandomCoolDown > 0) {BounsSituation = 0;} //不會生成
+    else                       { BounsSituation = 0;}      //會生成
 
     //讀取4種共8個方向的bitBoard，計算總值
     int bitNum = 0;
@@ -598,33 +666,20 @@ public:
             }
           }
          
+         key += ( /*BounsSituation +*/ lastNextTile ) *  power(17, 6);
+            
           //更新平均差值(無論是正是負)
-          //key += BounsSituation *  power(17, 6);
-          //net[type][keyC] += piece;
+      			float temp_learning_rate;
+			      float a_feature = net[type + 8][key];
+			      if(a_feature == 0)
+			      	temp_learning_rate = 1;
+		      	else
+			      	temp_learning_rate = fabs(net[type + 4][key]) / a_feature;
           
-          keyA = key;
-          keyB = key;
-          keyC = key;
-          
-          keyA += 2 *  power(17, 6);
-          keyB += 1 *  power(17, 6);
-          keyC += 0 *  power(17, 6);
-          
-
-          if(BounsSituation >= 2)
-          {
-            net[type][keyA] += piece;
-          }
-          if(BounsSituation >= 1)
-          {
-            net[type][keyB] += piece;
-          }
-          if(BounsSituation >= 0)
-          {
-            net[type][keyC] += piece;
-          }
-          
-          
+          net[type][key] += piece * temp_learning_rate * alpha;
+          net[type + 4][key] += piece;
+		    	net[type + 8][key] += fabs(piece);
+                             
       }
     }  
            
@@ -668,16 +723,23 @@ public:
     float highValue =  -1 ;
     int highOp = -1;
    
-    if( random_training == false ||  alpha == 0 ) //如果不使用隨機訓練，或是不需要訓練(訓練幅度=0)
-     {
+   // if( random_training == false ||  alpha == 0 ) //如果不使用隨機訓練，或是不需要訓練(訓練幅度=0)
+    // {
 		    
         for (int op : opcode) {
           board TempBoard = before;                   //使用初始版面(傳入的版面)
 		    	board::reward reward = TempBoard.slide(op); //紀錄往op方向滑完後的版面
-          float value = countValue(TempBoard);        //紀錄滑完後的網路數值
+          float value = countValue(TempBoard,RandomCoolDown,nextTile);        //紀錄滑完後的網路數值
           
 		    	if (reward != -1) //如果該方向可滑動
           {
+            if(highOp == -1) 
+            {  
+              highValue = value;
+              highOp = op;
+            }  
+            
+            
             if( value > highValue) //尋找數值最高的方向，記錄下來
             {  
               highValue = value;
@@ -690,8 +752,8 @@ public:
             return action::slide(highOp);
         else             //所有方向都不可動，GG。     
 	    	    return action();
-     }
-     else //如果使用隨機訓練
+    // }
+    /* else //如果使用隨機訓練
      { 
         for (int op : opcode) //隨機挑一個可滑的方向使用
         {
@@ -701,10 +763,14 @@ public:
 	    	}
           
 	    	return action();
-     }
+     }*/
 	}
 
 private:
 	std::array<int, 4> opcode;
 	std::uniform_int_distribution<int> random; //隨機參數，建構時會設置範圍
+ 
+ public :
+  int RandomCoolDown;
+  int nextTile;
 };
